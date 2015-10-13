@@ -1,0 +1,21 @@
+# Godan worker configuration file
+
+Name = "worker name"
+
+[Rpcmq]
+Host = "localhost"
+Port = "5672"
+Queue = "rpc-queue" 
+Exchange = "rpc-exchange"
+ExchangeType = "direct" 
+
+[Monmq]
+Host = "localhost"
+Port = "5672"
+Parallel = 50
+
+[Proxy]
+Host = "localhost"
+Port = "9050"
+Username = "proxy_user"
+Password = "proxy_pwd"

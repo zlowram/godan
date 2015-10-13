@@ -1,0 +1,16 @@
+# Godan server configuration file
+
+[Rpcmq]
+Host = "localhost"
+Port = "5672"
+MsgQueue = "rpc-msg-queue" 
+RplyQueue = "rpc-reply-queue" 
+Exchange = "rpc-exchange"
+ExchangeType = "direct" 
+
+[DB]
+Host = "localhost"
+Port = "3306"
+Username = "db_user"
+Password = "db_pwd"
+Name = "db_name"
