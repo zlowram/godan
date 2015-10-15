@@ -8,16 +8,18 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jroimartin/monmq"
 	"github.com/jroimartin/orujo"
 	olog "github.com/jroimartin/orujo-handlers/log"
 	"github.com/jroimartin/rpcmq"
 )
 
 type server struct {
-	config   Config
-	logger   *log.Logger
-	client   *rpcmq.Client
-	database *sql.DB
+	config     Config
+	logger     *log.Logger
+	client     *rpcmq.Client
+	supervisor *monmq.Supervisor
+	database   *sql.DB
 }
 
 func newServer(cfg Config) *server {
@@ -33,9 +35,16 @@ func (s *server) start() error {
 	s.client = rpcmq.NewClient("amqp://"+s.config.Rpcmq.Host+":"+s.config.Rpcmq.Port, s.config.Rpcmq.MsgQueue, s.config.Rpcmq.ReplyQueue, s.config.Rpcmq.Exchange, s.config.Rpcmq.ExchangeType)
 	err := s.client.Init()
 	if err != nil {
-		log.Fatalf("Init: %v", err)
+		log.Fatalf("Init rpcmq: %v", err)
 	}
 	defer s.client.Shutdown()
+
+	s.supervisor = monmq.NewSupervisor("amqp://10.0.1.3:5672",
+		"mon-replies", "mon-exchange")
+	if err := s.supervisor.Init(); err != nil {
+		log.Fatalf("Init monmq: %v", err)
+	}
+	defer s.supervisor.Shutdown()
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8", s.config.DB.Username, s.config.DB.Password, s.config.DB.Host, s.config.DB.Port, s.config.DB.Name)
 	s.database, err = sql.Open("mysql", dsn)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -30,7 +31,13 @@ func (s *server) tasksHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) statusHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Current status requested.")
+	b, err := json.Marshal(s.supervisor.Status())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		orujo.RegisterError(w, fmt.Errorf("error marshaling status:", err))
+		return
+	}
+	fmt.Fprintf(w, "%s", b)
 }
 
 func (s *server) allIpsHandler(w http.ResponseWriter, r *http.Request) {
