@@ -8,8 +8,14 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/jroimartin/monmq"
 	"github.com/jroimartin/orujo"
 )
+
+type MonmqCmd struct {
+	Target  string
+	Command string
+}
 
 type Filters struct {
 	ports    []string
@@ -31,13 +37,45 @@ func (s *server) tasksHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) statusHandler(w http.ResponseWriter, r *http.Request) {
-	b, err := json.Marshal(s.supervisor.Status())
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		orujo.RegisterError(w, fmt.Errorf("error marshaling status:", err))
-		return
+	switch {
+	case r.Method == "POST":
+		data, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			orujo.RegisterError(w, fmt.Errorf("Reading POST:", err))
+			return
+		}
+		var cmd MonmqCmd
+		if err = json.Unmarshal(data, &cmd); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			orujo.RegisterError(w, fmt.Errorf("Parsing json:", err))
+			return
+		}
+		var command monmq.Command
+		switch {
+		case cmd.Command == "softshutdown":
+			command = monmq.SoftShutdown
+		case cmd.Command == "hardshutdown":
+			command = monmq.HardShutdown
+		case cmd.Command == "pause":
+			command = monmq.Pause
+		case cmd.Command == "resume":
+			command = monmq.Resume
+		}
+		if err = s.supervisor.Invoke(command, cmd.Target); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			orujo.RegisterError(w, fmt.Errorf("Invoking monmq command:", err))
+			return
+		}
+	case r.Method == "GET":
+		b, err := json.Marshal(s.supervisor.Status())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			orujo.RegisterError(w, fmt.Errorf("error marshaling status:", err))
+			return
+		}
+		fmt.Fprintf(w, "%s", b)
 	}
-	fmt.Fprintf(w, "%s", b)
 }
 
 func (s *server) allIpsHandler(w http.ResponseWriter, r *http.Request) {

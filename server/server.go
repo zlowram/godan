@@ -69,7 +69,7 @@ func (s *server) start() error {
 
 	websrv.Route(`^/status$`,
 		http.HandlerFunc(s.statusHandler),
-		orujo.M(logHandler)).Methods("GET")
+		orujo.M(logHandler)).Methods("GET", "POST")
 
 	websrv.Route(`^/ips\??$`,
 		http.HandlerFunc(s.allIpsHandler),
