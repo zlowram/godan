@@ -72,11 +72,11 @@ func (s *server) start() error {
 		orujo.M(logHandler)).Methods("GET", "POST")
 
 	websrv.Route(`^/ips\??$`,
-		http.HandlerFunc(s.allIpsHandler),
+		http.HandlerFunc(s.queryHandler),
 		orujo.M(logHandler)).Methods("GET")
 
 	websrv.Route(`^/ips/(?:\d{1,3}\.){3}\d{1,3}\??$`,
-		http.HandlerFunc(s.ipsHandler),
+		http.HandlerFunc(s.queryHandler),
 		orujo.M(logHandler)).Methods("GET")
 
 	log.Fatalln(websrv.ListenAndServe())

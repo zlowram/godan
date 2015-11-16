@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
-	"net/url"
 	"strings"
+	"text/template"
 
 	"github.com/jroimartin/monmq"
 	"github.com/jroimartin/orujo"
@@ -18,9 +20,17 @@ type MonmqCmd struct {
 }
 
 type Filters struct {
-	ports    []string
-	services []string
-	regexp   string
+	Ip       string
+	Ports    []string
+	Services []string
+	Regexp   string
+}
+
+type Banner struct {
+	Ip      string
+	Port    string
+	Service string
+	Content string
 }
 
 func (s *server) tasksHandler(w http.ResponseWriter, r *http.Request) {
@@ -78,27 +88,76 @@ func (s *server) statusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *server) allIpsHandler(w http.ResponseWriter, r *http.Request) {
-	values := r.URL.Query()
-	f := extractFilters(values)
-	fmt.Fprintln(w, "Ports:", f.ports)
-	fmt.Fprintln(w, "Services:", f.services)
-	fmt.Fprintln(w, "Regexp:", f.regexp)
+func (s *server) queryHandler(w http.ResponseWriter, r *http.Request) {
+	f := extractFilters(r)
+
+	t := template.Must(template.New("query").Parse(queryTemplate))
+	query := &bytes.Buffer{}
+	err := t.Execute(query, f)
+	if err != nil {
+		log.Println("executing template:", err)
+	}
+
+	stmt, err := s.database.Prepare(query.String())
+	if err != nil {
+		log.Println("preparing statement:", err)
+	}
+
+	data := make([]interface{}, 0, len(f.Ports))
+	if f.Ip != "" {
+		data = append(data, f.Ip)
+	}
+	for _, v := range f.Ports {
+		data = append(data, v)
+	}
+	for _, v := range f.Services {
+		data = append(data, v)
+	}
+	if f.Regexp != "" {
+		data = append(data, f.Regexp)
+	}
+
+	rows, err := stmt.Query(data...)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		orujo.RegisterError(w, fmt.Errorf("error querying:", err))
+		return
+	}
+	defer rows.Close()
+
+	var result []Banner
+	for rows.Next() {
+		var curr Banner
+		if err := rows.Scan(&curr.Ip, &curr.Port, &curr.Service, &curr.Content); err != nil {
+			log.Fatal(err)
+		}
+		result = append(result, curr)
+	}
+	jsoned, err := json.Marshal(result)
+	if err != nil {
+		log.Println("marshaling:", err)
+	}
+	fmt.Fprintf(w, string(jsoned))
 }
 
-func (s *server) ipsHandler(w http.ResponseWriter, r *http.Request) {
-	ip := strings.TrimPrefix(r.URL.Path, "/ips/")
-	values := r.URL.Query()
-	f := extractFilters(values)
-	fmt.Fprintln(w, "IP:", ip)
-	fmt.Fprintln(w, "Ports:", f.ports)
-	fmt.Fprintln(w, "Services:", f.services)
-	fmt.Fprintln(w, "Regexp:", f.regexp)
-}
+const (
+	queryTemplate = `SELECT DISTINCT INET_NTOA(ip), port, service, content FROM banners
+{{if or .Ip .Ports .Services .Regexp}} WHERE{{end}}
+{{if .Ip}} ip = INET_ATON((?)){{end}}
+{{if and .Ip .Ports}} AND{{end}}{{if .Ports}} port IN ({{range $i, $v := .Ports}}{{if $i}},{{end}}?{{end}}){{end}}
+{{if and .Services (or .Ports .Services)}} AND{{end}}{{if .Services}} service IN ({{range $i, $v := .Services}}{{if $i}},{{end}}?{{end}}){{end}}
+{{if and .Regexp (or .Ip .Ports .Services)}} AND{{end}}{{if .Regexp}} content regexp (?){{end}};`
+)
 
-func extractFilters(values url.Values) Filters {
+func extractFilters(request *http.Request) Filters {
 	var p, s []string
 	var r string
+
+	values := request.URL.Query()
+	ip := strings.TrimPrefix(request.URL.Path, "/ips")
+	if ip != "" {
+		ip = strings.TrimPrefix(ip, "/")
+	}
 	if values["port"] != nil {
 		p = strings.Split(values["port"][0], ",")
 	}
@@ -109,9 +168,10 @@ func extractFilters(values url.Values) Filters {
 		r = values["regexp"][0]
 	}
 	filters := Filters{
-		ports:    p,
-		services: s,
-		regexp:   r,
+		Ip:       ip,
+		Ports:    p,
+		Services: s,
+		Regexp:   r,
 	}
 	return filters
 }
