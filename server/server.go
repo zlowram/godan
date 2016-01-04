@@ -33,6 +33,7 @@ func newServer(cfg Config) *server {
 
 func (s *server) start() error {
 	s.client = rpcmq.NewClient("amqp://"+s.config.Rpcmq.Host+":"+s.config.Rpcmq.Port, s.config.Rpcmq.MsgQueue, s.config.Rpcmq.ReplyQueue, s.config.Rpcmq.Exchange, s.config.Rpcmq.ExchangeType)
+	s.client.DeliveryMode = rpcmq.Transient
 	err := s.client.Init()
 	if err != nil {
 		log.Fatalf("Init rpcmq: %v", err)

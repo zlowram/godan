@@ -60,6 +60,7 @@ func main() {
 		log.Fatalf("Register: %v", err)
 	}
 
+	s.DeliveryMode = rpcmq.Transient
 	s.Parallel = config.Monmq.Parallel
 
 	if err := s.Init(); err != nil {
