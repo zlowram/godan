@@ -39,8 +39,7 @@ func (s *server) start() error {
 	}
 	defer s.client.Shutdown()
 
-	s.supervisor = monmq.NewSupervisor("amqp://10.0.1.3:5672",
-		"mon-replies", "mon-exchange")
+	s.supervisor = monmq.NewSupervisor("amqp://"+s.config.Monmq.Host+":"+s.config.Monmq.Port, s.config.Monmq.ReplyQueue, s.config.Monmq.Exchange)
 	if err := s.supervisor.Init(); err != nil {
 		log.Fatalf("Init monmq: %v", err)
 	}
@@ -58,8 +57,8 @@ func (s *server) start() error {
 		log.Fatal(err)
 	}
 
-	websrv := orujo.NewServer("localhost:8080")
-	fmt.Println("Listening on localhost:8080...")
+	websrv := orujo.NewServer(s.config.Local.Host + ":" + s.config.Local.Port)
+	fmt.Println("Listening on " + s.config.Local.Host + ":" + s.config.Local.Port + "...")
 
 	logHandler := olog.NewLogHandler(s.logger, logLine)
 

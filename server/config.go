@@ -7,8 +7,15 @@ import (
 )
 
 type Config struct {
+	Local Local
 	Rpcmq Rpcmq
+	Monmq Monmq
 	DB    Database
+}
+
+type Local struct {
+	Host string
+	Port string
 }
 
 type Rpcmq struct {
@@ -18,6 +25,13 @@ type Rpcmq struct {
 	ReplyQueue   string
 	Exchange     string
 	ExchangeType string
+}
+
+type Monmq struct {
+	Host       string
+	Port       string
+	ReplyQueue string
+	Exchange   string
 }
 
 type Database struct {
