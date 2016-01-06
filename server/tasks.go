@@ -21,10 +21,11 @@ type taskManager struct {
 	database *sql.DB
 }
 
-func newTaskManager(c *rpcmq.Client) *taskManager {
+func newTaskManager(c *rpcmq.Client, d *sql.DB) *taskManager {
 	tm := &taskManager{
-		ctrl:   &ctrlTable{m: make(map[string]bool)},
-		client: c,
+		ctrl:     &ctrlTable{m: make(map[string]bool)},
+		client:   c,
+		database: d,
 	}
 	return tm
 }

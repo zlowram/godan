@@ -10,7 +10,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jroimartin/monmq"
 	"github.com/jroimartin/orujo"
-	olog "github.com/jroimartin/orujo-handlers/log"
+	olog "github.com/jroimartin/orujo/log"
 	"github.com/jroimartin/rpcmq"
 )
 
@@ -58,28 +58,30 @@ func (s *server) start() error {
 		log.Fatal(err)
 	}
 
-	websrv := orujo.NewServer(s.config.Local.Host + ":" + s.config.Local.Port)
-	fmt.Println("Listening on " + s.config.Local.Host + ":" + s.config.Local.Port + "...")
-
 	logHandler := olog.NewLogHandler(s.logger, logLine)
 
-	websrv.Route(`^/tasks$`,
+	http.Handle("/tasks", orujo.NewPipe(
 		http.HandlerFunc(s.tasksHandler),
-		orujo.M(logHandler)).Methods("POST")
+		orujo.M(logHandler)),
+	)
 
-	websrv.Route(`^/status$`,
+	http.Handle("/status", orujo.NewPipe(
 		http.HandlerFunc(s.statusHandler),
-		orujo.M(logHandler)).Methods("GET", "POST")
+		orujo.M(logHandler)),
+	)
 
-	websrv.Route(`^/ips\??$`,
+	http.Handle("/ips", orujo.NewPipe(
 		http.HandlerFunc(s.queryHandler),
-		orujo.M(logHandler)).Methods("GET")
+		orujo.M(logHandler)),
+	)
 
-	websrv.Route(`^/ips/(?:\d{1,3}\.){3}\d{1,3}\??$`,
+	http.Handle("/ips/", orujo.NewPipe(
 		http.HandlerFunc(s.queryHandler),
-		orujo.M(logHandler)).Methods("GET")
+		orujo.M(logHandler)),
+	)
 
-	log.Fatalln(websrv.ListenAndServe())
+	fmt.Println("Listening on " + s.config.Local.Host + ":" + s.config.Local.Port + "...")
+	log.Fatalln(http.ListenAndServe(s.config.Local.Host+":"+s.config.Local.Port, nil))
 
 	return nil
 }

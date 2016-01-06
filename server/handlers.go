@@ -40,8 +40,8 @@ func (s *server) tasksHandler(w http.ResponseWriter, r *http.Request) {
 		orujo.RegisterError(w, fmt.Errorf("Reading POST:", err))
 		return
 	}
-	tasks := []string{string(data)}
-	tm := newTaskManager(s.client)
+	tasks := strings.Split(string(data), ",")
+	tm := newTaskManager(s.client, s.database)
 	go tm.runTasks(tasks)
 	fmt.Fprintln(w, "{\"status\": \"success\"}")
 }
@@ -90,6 +90,7 @@ func (s *server) statusHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) queryHandler(w http.ResponseWriter, r *http.Request) {
 	f := extractFilters(r)
+	fmt.Println(f.Ip, f.Ports, f.Services, f.Regexp)
 
 	t := template.Must(template.New("query").Parse(queryTemplate))
 	query := &bytes.Buffer{}
