@@ -90,7 +90,6 @@ func (s *server) statusHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) queryHandler(w http.ResponseWriter, r *http.Request) {
 	f := extractFilters(r)
-	fmt.Println(f.Ip, f.Ports, f.Services, f.Regexp)
 
 	t := template.Must(template.New("query").Parse(queryTemplate))
 	query := &bytes.Buffer{}
