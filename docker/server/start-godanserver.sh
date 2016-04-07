@@ -1,4 +1,4 @@
 #!/bin/sh
 
-sleep 15 && /usr/local/bin/godanserver /etc/godanserver.toml
+sleep 25 && /usr/local/bin/godanserver /etc/godanserver.toml
 

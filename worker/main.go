@@ -32,7 +32,7 @@ func main() {
 
 	cmds := make(chan monmq.Command)
 	monmq.Log = log.New(os.Stderr, "", log.LstdFlags)
-	a = monmq.NewAgent("amqp://"+config.Monmq.Host+":"+config.Monmq.Port, "mon-exchange", config.Name)
+	a = monmq.NewAgent("amqp://"+config.Monmq.Host+":"+config.Monmq.Port, config.Monmq.Exchange, config.Name)
 
 	a.HardShutdownFunc = func(data []byte) ([]byte, error) {
 		cmds <- monmq.HardShutdown

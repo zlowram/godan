@@ -13,6 +13,7 @@ ExchangeType = "direct"
 Host = "rabbitmq"
 Port = "5672"
 Parallel = 50
+Exchange = "mon-exchange"
 
 #[Proxy]
 #Host = "localhost"

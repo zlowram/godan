@@ -25,6 +25,7 @@ type Monmq struct {
 	Host     string
 	Port     string
 	Parallel int
+	Exchange string
 }
 
 type Proxy struct {

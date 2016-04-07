@@ -8,7 +8,7 @@ Port = "8080"
 Host = "rabbitmq"
 Port = "5672"
 MsgQueue = "rpc-msg-queue" 
-ReplyQueue = "rpc-reply-queue" 
+ReplyQueue = "rpc-replies-queue" 
 Exchange = "rpc-exchange"
 ExchangeType = "direct" 
 

@@ -5,10 +5,10 @@ compile: compile-server compile-worker
 build: build-server build-worker
 
 compile-server:
-	cd server && env GOOS=linux GOARCH=amd64 go build && mv server ../docker/server/godanserver
+	export CGO_ENABLED=0 && cd server && env GOOS=linux GOARCH=amd64 go build && mv server ../docker/server/godanserver
 
 compile-worker:
-	cd worker && env GOOS=linux GOARCH=amd64 go build && mv worker ../docker/worker/godanworker
+	export CGO_ENABLED=0 && cd worker && env GOOS=linux GOARCH=amd64 go build && mv worker ../docker/worker/godanworker
 
 build-server:
 	cd docker/server/ && docker build -t zlowram/godanserver .
