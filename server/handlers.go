@@ -152,7 +152,7 @@ const (
 {{if or .Ip .Ports .Services .Regexp}} WHERE{{end}}
 {{if .Ip}} ip = INET_ATON((?)){{end}}
 {{if and .Ip .Ports}} AND{{end}}{{if .Ports}} port IN ({{range $i, $v := .Ports}}{{if $i}},{{end}}?{{end}}){{end}}
-{{if and .Services (or .Ports .Services)}} AND{{end}}{{if .Services}} service IN ({{range $i, $v := .Services}}{{if $i}},{{end}}?{{end}}){{end}}
+{{if and .Services (or .Ip .Ports)}} AND{{end}}{{if .Services}} service IN ({{range $i, $v := .Services}}{{if $i}},{{end}}?{{end}}){{end}}
 {{if and .Regexp (or .Ip .Ports .Services)}} AND{{end}}{{if .Regexp}} content regexp (?){{end}};`
 )
 
