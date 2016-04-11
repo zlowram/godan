@@ -1,4 +1,4 @@
-all: compile build compose
+all: compile build create
 
 compile: compile-server compile-worker
 
@@ -16,8 +16,8 @@ build-server:
 build-worker:
 	cd docker/worker/ && docker build -t zlowram/godanworker .
 
-compose:
-	cd docker && docker-compose up
+create:
+	cd docker && ./run_containers.sh 
 
 destroy:
-	cd docker && docker-compose kill && docker-compose rm -f
+	docker kill db rabbitmq godan_server godan_worker && docker rm db rabbitmq godan_server godan_worker
