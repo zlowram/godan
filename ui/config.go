@@ -13,8 +13,10 @@ type Config struct {
 }
 
 type Local struct {
-	Host string
-	Port string
+	Host       string
+	Port       string
+	PrivateKey string
+	PublicKey  string
 }
 
 type Database struct {

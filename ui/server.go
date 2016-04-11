@@ -51,7 +51,7 @@ func newServer(config Config) *server {
 	return &server{
 		config: config,
 		db:     db,
-		auth:   jwtauth.NewAuthHandler("keys/private.pem", "keys/public.pem"),
+		auth:   jwtauth.NewAuthHandler(config.Local.PrivateKey, config.Local.PublicKey),
 	}
 }
 
