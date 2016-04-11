@@ -40,8 +40,8 @@ func (s *server) tasksHandler(w http.ResponseWriter, r *http.Request) {
 		orujo.RegisterError(w, fmt.Errorf("Reading POST:", err))
 		return
 	}
-	var tasks []string
-	err = json.Unmarshal(data, &tasks)
+	var task Task
+	err = json.Unmarshal(data, &task)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		orujo.RegisterError(w, fmt.Errorf("Reading POST:", err))
@@ -49,7 +49,7 @@ func (s *server) tasksHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tm := newTaskManager(s.client, s.database)
-	go tm.runTasks(tasks)
+	go tm.runTasks(task)
 	fmt.Fprintln(w, "{\"status\": \"success\"}")
 }
 

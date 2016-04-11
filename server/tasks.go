@@ -3,7 +3,12 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
+	"net"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -21,6 +26,11 @@ type taskManager struct {
 	database *sql.DB
 }
 
+type Task struct {
+	IPs   []string `json:"ips"`
+	Ports []string `json:"ports"`
+}
+
 func newTaskManager(c *rpcmq.Client, d *sql.DB) *taskManager {
 	tm := &taskManager{
 		ctrl:     &ctrlTable{m: make(map[string]bool)},
@@ -30,25 +40,36 @@ func newTaskManager(c *rpcmq.Client, d *sql.DB) *taskManager {
 	return tm
 }
 
-func (tm *taskManager) runTasks(tasks []string) {
+func (tm *taskManager) runTasks(task Task) {
+	ports := expandPorts(task.Ports)
+
 	tm.wg.Add(1)
 	go func() {
-		for _, task := range tasks {
-			if taskLimit > 0 {
-				for {
-					sent, _ := tm.ctrl.status()
-					if sent < taskLimit {
-						break
-					}
-					<-time.After(2 * time.Second)
+		var ipExpander *IPExpander
+		for _, cidr := range task.IPs {
+			var ip net.IP
+			var err error
+			var ok bool
+			if ipExpander, err = NewIPExpander(cidr); err != nil {
+				ip = net.ParseIP(cidr)
+				for _, port := range ports {
+					task := ip.String() + ":" + port
+					tm.sendTask([]byte(task))
+					fmt.Println(task)
+				}
+				continue
+			}
+			for {
+				ip, ok = ipExpander.Next()
+				if !ok {
+					break
+				}
+				for _, port := range ports {
+					task := ip.String() + ":" + port
+					tm.sendTask([]byte(task))
+					fmt.Println(task)
 				}
 			}
-			uuid, err := tm.client.Call("getService", []byte(task), 0)
-			if err != nil {
-				log.Println("Call:", err)
-			}
-
-			tm.ctrl.insert(uuid, false)
 		}
 
 		tm.ctrl.setFull(true)
@@ -82,6 +103,24 @@ func (tm *taskManager) runTasks(tasks []string) {
 		tm.wg.Done()
 	}()
 	tm.wg.Wait()
+}
+
+func (tm *taskManager) sendTask(task []byte) {
+	if taskLimit > 0 {
+		for {
+			sent, _ := tm.ctrl.status()
+			if sent < taskLimit {
+				break
+			}
+			<-time.After(2 * time.Second)
+		}
+	}
+	uuid, err := tm.client.Call("getService", task, 0)
+	if err != nil {
+		log.Println("Call:", err)
+	}
+
+	tm.ctrl.insert(uuid, false)
 }
 
 type banner struct {
@@ -140,4 +179,39 @@ func (ct *ctrlTable) status() (int, int) {
 		}
 	}
 	return sent, completed
+}
+
+func expandPorts(ports []string) []string {
+	var portList []string
+
+	for _, i := range ports {
+		if strings.Contains(i, "-") {
+			sp := strings.Split(i, "-")
+			prange, err := portRange(sp[0], sp[1])
+			if err != nil {
+				log.Fatal(err)
+			}
+			portList = append(portList, prange...)
+		} else {
+			portList = append(portList, i)
+		}
+	}
+	return portList
+}
+
+func portRange(a, b string) ([]string, error) {
+	var ports []string
+
+	n, _ := strconv.Atoi(a)
+	m, _ := strconv.Atoi(b)
+
+	if n >= m {
+		return ports, errors.New("First parameter cannot be equal or greater than second")
+	}
+
+	for i := n; i <= m; i++ {
+		ports = append(ports, strconv.Itoa(i))
+	}
+
+	return ports, nil
 }
