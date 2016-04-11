@@ -11,7 +11,6 @@ import (
 	"text/template"
 
 	"github.com/jroimartin/monmq"
-	"github.com/jroimartin/orujo"
 )
 
 type MonmqCmd struct {
@@ -36,16 +35,16 @@ type Banner struct {
 func (s *server) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		orujo.RegisterError(w, fmt.Errorf("Reading POST:", err))
+		log.Println("Error reading body:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
 		return
 	}
 	var task Task
 	err = json.Unmarshal(data, &task)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		orujo.RegisterError(w, fmt.Errorf("Reading POST:", err))
-		orujo.RegisterError(w, fmt.Errorf("Unmarshal tasks:", err))
+		fmt.Fprintf(w, "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"Invalid json format.\"}]}\n")
 		return
 	}
 	tm := newTaskManager(s.client, s.database)
@@ -58,14 +57,15 @@ func (s *server) statusHandler(w http.ResponseWriter, r *http.Request) {
 	case r.Method == "POST":
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			orujo.RegisterError(w, fmt.Errorf("Reading POST:", err))
+			log.Println("Error reading body:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
 			return
 		}
 		var cmd MonmqCmd
 		if err = json.Unmarshal(data, &cmd); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			orujo.RegisterError(w, fmt.Errorf("Parsing json:", err))
+			fmt.Fprintf(w, "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"Invalid json format.\"}]}\n")
 			return
 		}
 		var command monmq.Command
@@ -81,14 +81,15 @@ func (s *server) statusHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = s.supervisor.Invoke(command, cmd.Target); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			orujo.RegisterError(w, fmt.Errorf("Invoking monmq command:", err))
+			fmt.Fprintf(w, "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"Invalid command for target.\"}]}\n")
 			return
 		}
 	case r.Method == "GET":
 		b, err := json.Marshal(s.supervisor.Status())
 		if err != nil {
+			log.Println("Error marshaling:", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			orujo.RegisterError(w, fmt.Errorf("error marshaling status:", err))
+			fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
 			return
 		}
 		fmt.Fprintf(w, "%s", b)
@@ -102,12 +103,18 @@ func (s *server) queryHandler(w http.ResponseWriter, r *http.Request) {
 	query := &bytes.Buffer{}
 	err := t.Execute(query, f)
 	if err != nil {
-		log.Println("executing template:", err)
+		log.Println("Error executing template:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
+		return
 	}
 
 	stmt, err := s.database.Prepare(query.String())
 	if err != nil {
-		log.Println("preparing statement:", err)
+		log.Println("Error preparing statement:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
+		return
 	}
 
 	data := make([]interface{}, 0, len(f.Ports))
@@ -126,8 +133,9 @@ func (s *server) queryHandler(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := stmt.Query(data...)
 	if err != nil {
+		log.Println("Error querying:", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		orujo.RegisterError(w, fmt.Errorf("error querying:", err))
+		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
 		return
 	}
 	defer rows.Close()
@@ -136,13 +144,19 @@ func (s *server) queryHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var curr Banner
 		if err := rows.Scan(&curr.Ip, &curr.Port, &curr.Service, &curr.Content); err != nil {
-			log.Fatal(err)
+			log.Println("Error scanning the query:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
+			return
 		}
 		result = append(result, curr)
 	}
 	jsoned, err := json.Marshal(result)
 	if err != nil {
-		log.Println("marshaling:", err)
+		log.Println("Error marshaling:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
+		return
 	}
 	fmt.Fprintf(w, string(jsoned))
 }
