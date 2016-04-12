@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -149,6 +150,7 @@ func (s *server) queryHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
 			return
 		}
+		curr.Content = base64.StdEncoding.EncodeToString([]byte(curr.Content))
 		result = append(result, curr)
 	}
 	jsoned, err := json.Marshal(result)
