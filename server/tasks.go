@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -55,7 +54,6 @@ func (tm *taskManager) runTasks(task Task) {
 				for _, port := range ports {
 					task := ip.String() + ":" + port
 					tm.sendTask([]byte(task))
-					fmt.Println(task)
 				}
 				continue
 			}
@@ -67,7 +65,6 @@ func (tm *taskManager) runTasks(task Task) {
 				for _, port := range ports {
 					task := ip.String() + ":" + port
 					tm.sendTask([]byte(task))
-					fmt.Println(task)
 				}
 			}
 		}
