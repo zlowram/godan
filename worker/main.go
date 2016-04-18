@@ -61,7 +61,7 @@ func main() {
 	}
 
 	s.DeliveryMode = rpcmq.Transient
-	s.Parallel = config.Monmq.Parallel
+	s.Parallel = config.Rpcmq.Parallel
 
 	if err := s.Init(); err != nil {
 		log.Fatalf("Init: %v", err)

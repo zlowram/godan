@@ -19,12 +19,12 @@ type Rpcmq struct {
 	Queue        string
 	Exchange     string
 	ExchangeType string
+	Parallel     int
 }
 
 type Monmq struct {
 	Host     string
 	Port     string
-	Parallel int
 	Exchange string
 }
 
