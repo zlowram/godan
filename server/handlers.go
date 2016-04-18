@@ -140,7 +140,7 @@ func (s *server) queryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var result []Banner
+	result := make([]Banner, 0)
 	for rows.Next() {
 		var curr Banner
 		if err := rows.Scan(&curr.Ip, &curr.Port, &curr.Service, &curr.Content); err != nil {
