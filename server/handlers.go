@@ -176,7 +176,7 @@ func extractFilters(request *http.Request) Filters {
 	var r string
 
 	values := request.URL.Query()
-	ip := strings.TrimPrefix(request.URL.Path, "/ips")
+	ip := values.Get(":ip")
 	if ip != "" {
 		ip = strings.TrimPrefix(ip, "/")
 	}

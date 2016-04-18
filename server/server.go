@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/bmizerany/pat"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/husobee/vestigo"
 	"github.com/jroimartin/monmq"
 	"github.com/jroimartin/orujo"
 	olog "github.com/jroimartin/orujo/log"
@@ -59,29 +59,32 @@ func (s *server) start() error {
 		log.Fatal(err)
 	}
 
-	m := pat.New()
+	m := vestigo.NewRouter()
 	logHandler := olog.NewLogHandler(s.logger, logLine)
 
-	m.Post("/tasks/", orujo.NewPipe(
+	m.Post("/tasks", orujo.NewPipe(
 		http.HandlerFunc(s.tasksHandler),
-		orujo.M(logHandler)),
+		orujo.M(logHandler)).ServeHTTP,
 	)
-	m.Get("/status/", orujo.NewPipe(
+	m.Get("/status", orujo.NewPipe(
 		http.HandlerFunc(s.getStatusHandler),
-		orujo.M(logHandler)),
+		orujo.M(logHandler)).ServeHTTP,
 	)
-	m.Post("/status/", orujo.NewPipe(
+	m.Post("/status", orujo.NewPipe(
 		http.HandlerFunc(s.setStatusHandler),
-		orujo.M(logHandler)),
+		orujo.M(logHandler)).ServeHTTP,
 	)
-	m.Get("/ips/", orujo.NewPipe(
+	m.Get("/ips/:ip", orujo.NewPipe(
 		http.HandlerFunc(s.queryHandler),
-		orujo.M(logHandler)),
+		orujo.M(logHandler)).ServeHTTP,
+	)
+	m.Get("/ips", orujo.NewPipe(
+		http.HandlerFunc(s.queryHandler),
+		orujo.M(logHandler)).ServeHTTP,
 	)
 
-	http.Handle("/", m)
 	fmt.Println("Listening on " + s.config.Local.Host + ":" + s.config.Local.Port + "...")
-	log.Fatalln(http.ListenAndServe(s.config.Local.Host+":"+s.config.Local.Port, nil))
+	log.Fatalln(http.ListenAndServe(s.config.Local.Host+":"+s.config.Local.Port, m))
 
 	return nil
 }
