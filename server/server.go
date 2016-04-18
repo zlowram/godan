@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/bmizerany/pat"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jroimartin/monmq"
 	"github.com/jroimartin/orujo"
@@ -58,28 +59,27 @@ func (s *server) start() error {
 		log.Fatal(err)
 	}
 
+	m := pat.New()
 	logHandler := olog.NewLogHandler(s.logger, logLine)
 
-	http.Handle("/tasks", orujo.NewPipe(
+	m.Post("/tasks/", orujo.NewPipe(
 		http.HandlerFunc(s.tasksHandler),
 		orujo.M(logHandler)),
 	)
-
-	http.Handle("/status", orujo.NewPipe(
-		http.HandlerFunc(s.statusHandler),
+	m.Get("/status/", orujo.NewPipe(
+		http.HandlerFunc(s.getStatusHandler),
 		orujo.M(logHandler)),
 	)
-
-	http.Handle("/ips", orujo.NewPipe(
+	m.Post("/status/", orujo.NewPipe(
+		http.HandlerFunc(s.setStatusHandler),
+		orujo.M(logHandler)),
+	)
+	m.Get("/ips/", orujo.NewPipe(
 		http.HandlerFunc(s.queryHandler),
 		orujo.M(logHandler)),
 	)
 
-	http.Handle("/ips/", orujo.NewPipe(
-		http.HandlerFunc(s.queryHandler),
-		orujo.M(logHandler)),
-	)
-
+	http.Handle("/", m)
 	fmt.Println("Listening on " + s.config.Local.Host + ":" + s.config.Local.Port + "...")
 	log.Fatalln(http.ListenAndServe(s.config.Local.Host+":"+s.config.Local.Port, nil))
 

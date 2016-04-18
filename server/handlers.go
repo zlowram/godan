@@ -53,47 +53,46 @@ func (s *server) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "{\"status\": \"success\"}")
 }
 
-func (s *server) statusHandler(w http.ResponseWriter, r *http.Request) {
+func (s *server) getStatusHandler(w http.ResponseWriter, r *http.Request) {
+	b, err := json.Marshal(s.supervisor.Status())
+	if err != nil {
+		log.Println("Error marshaling:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
+		return
+	}
+	fmt.Fprintf(w, "%s", b)
+}
+
+func (s *server) setStatusHandler(w http.ResponseWriter, r *http.Request) {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Println("Error reading body:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
+		return
+	}
+	var cmd MonmqCmd
+	if err = json.Unmarshal(data, &cmd); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"Invalid json format.\"}]}\n")
+		return
+	}
+	var command monmq.Command
 	switch {
-	case r.Method == "POST":
-		data, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			log.Println("Error reading body:", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
-			return
-		}
-		var cmd MonmqCmd
-		if err = json.Unmarshal(data, &cmd); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"Invalid json format.\"}]}\n")
-			return
-		}
-		var command monmq.Command
-		switch {
-		case cmd.Command == "softshutdown":
-			command = monmq.SoftShutdown
-		case cmd.Command == "hardshutdown":
-			command = monmq.HardShutdown
-		case cmd.Command == "pause":
-			command = monmq.Pause
-		case cmd.Command == "resume":
-			command = monmq.Resume
-		}
-		if err = s.supervisor.Invoke(command, cmd.Target); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"Invalid command for target.\"}]}\n")
-			return
-		}
-	case r.Method == "GET":
-		b, err := json.Marshal(s.supervisor.Status())
-		if err != nil {
-			log.Println("Error marshaling:", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
-			return
-		}
-		fmt.Fprintf(w, "%s", b)
+	case cmd.Command == "softshutdown":
+		command = monmq.SoftShutdown
+	case cmd.Command == "hardshutdown":
+		command = monmq.HardShutdown
+	case cmd.Command == "pause":
+		command = monmq.Pause
+	case cmd.Command == "resume":
+		command = monmq.Resume
+	}
+	if err = s.supervisor.Invoke(command, cmd.Target); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"Invalid command for target.\"}]}\n")
+		return
 	}
 }
 
