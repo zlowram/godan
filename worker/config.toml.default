@@ -8,11 +8,12 @@ Port = "5672"
 Queue = "rpc-queue" 
 Exchange = "rpc-exchange"
 ExchangeType = "direct" 
+Parallel = 50
+Prefetch = 50
 
 [Monmq]
 Host = "localhost"
 Port = "5672"
-Parallel = 50
 Exchange = "mon-exchange"
 
 [Proxy]

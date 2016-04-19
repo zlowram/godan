@@ -62,6 +62,7 @@ func main() {
 
 	s.DeliveryMode = rpcmq.Transient
 	s.Parallel = config.Rpcmq.Parallel
+	s.Prefetch = config.Rpcmq.Prefetch
 
 	if err := s.Init(); err != nil {
 		log.Fatalf("Init: %v", err)
