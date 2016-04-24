@@ -11,7 +11,7 @@ compile-worker:
 	export CGO_ENABLED=0 && cd worker && env GOOS=linux GOARCH=amd64 go build && mv worker ../docker/worker/godanworker
 
 compile-ui:
-	export CGO_ENABLED=0 && cd ui && env GOOS=linux GOARCH=amd64 go build && mv ui ../docker/ui/godanui
+	export CGO_ENABLED=0 && cd ui/api && env GOOS=linux GOARCH=amd64 go build && mv api ../../docker/ui/godanui
 
 build-server:
 	cd docker/server/ && docker build -t zlowram/godanserver .
