@@ -63,7 +63,7 @@ func (s *server) start() error {
 
 	m.SetGlobalCors(&vestigo.CorsAccessControl{
 		AllowOrigin:      []string{"*"},
-		AllowCredentials: false,
+		AllowCredentials: true,
 		MaxAge:           3600 * time.Second,
 		AllowHeaders:     []string{"Authorization", "Content-Type"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
