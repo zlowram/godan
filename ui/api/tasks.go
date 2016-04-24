@@ -6,18 +6,16 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/context"
 )
 
 func (s *server) newTaskHandler(w http.ResponseWriter, r *http.Request) {
 	// Auhtorization check
-	user := context.Get(r, "user").(map[string]string)
-	if user["role"] != "admin" {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Access not authorized.\"}]}\n")
-		return
-	}
+	//user := context.Get(r, "user").(map[string]string)
+	//if user["role"] != "admin" {
+	//	w.WriteHeader(http.StatusUnauthorized)
+	//	fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Access not authorized.\"}]}\n")
+	//	return
+	//}
 
 	forwardPost(w, r, "http://"+s.config.Godan.Host+":"+s.config.Godan.Port+r.URL.RequestURI())
 	return
@@ -25,12 +23,12 @@ func (s *server) newTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) getIpHandler(w http.ResponseWriter, r *http.Request) {
 	// Auhtorization check
-	user := context.Get(r, "user").(map[string]string)
-	if user["role"] != "admin" && user["role"] != "user" {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Access not authorized.\"}]}\n")
-		return
-	}
+	//user := context.Get(r, "user").(map[string]string)
+	//if user["role"] != "admin" && user["role"] != "user" {
+	//	w.WriteHeader(http.StatusUnauthorized)
+	//	fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Access not authorized.\"}]}\n")
+	//	return
+	//}
 
 	forwardGet(w, r, "http://"+s.config.Godan.Host+":"+s.config.Godan.Port+r.URL.RequestURI())
 	return
@@ -38,12 +36,12 @@ func (s *server) getIpHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) getStatusHandler(w http.ResponseWriter, r *http.Request) {
 	// Auhtorization check
-	user := context.Get(r, "user").(map[string]string)
-	if user["role"] != "admin" {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Access not authorized.\"}]}\n")
-		return
-	}
+	//user := context.Get(r, "user").(map[string]string)
+	//if user["role"] != "admin" {
+	//	w.WriteHeader(http.StatusUnauthorized)
+	//	fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Access not authorized.\"}]}\n")
+	//	return
+	//}
 
 	forwardGet(w, r, "http://"+s.config.Godan.Host+":"+s.config.Godan.Port+r.URL.RequestURI())
 	return
@@ -51,12 +49,12 @@ func (s *server) getStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) setStatusHandler(w http.ResponseWriter, r *http.Request) {
 	// Auhtorization check
-	user := context.Get(r, "user").(map[string]string)
-	if user["role"] != "admin" {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Access not authorized.\"}]}\n")
-		return
-	}
+	//user := context.Get(r, "user").(map[string]string)
+	//if user["role"] != "admin" {
+	//	w.WriteHeader(http.StatusUnauthorized)
+	//	fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Access not authorized.\"}]}\n")
+	//	return
+	//}
 
 	forwardPost(w, r, "http://"+s.config.Godan.Host+":"+s.config.Godan.Port+r.URL.RequestURI())
 	return

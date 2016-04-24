@@ -3,8 +3,8 @@
 [Local]
 Host = "localhost"
 Port = "8000"
-PrivateKey = "/keys/sample_private.pem"
-PublicKey = "/keys/sample_public.pem"
+PrivateKey = "keys/sample_private.pem"
+PublicKey = "keys/sample_public.pem"
 
 [DB]
 Host = "localhost"
