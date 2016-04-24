@@ -20,6 +20,7 @@ type Rpcmq struct {
 	Exchange     string
 	ExchangeType string
 	Parallel     int
+	Prefetch     int
 }
 
 type Monmq struct {
