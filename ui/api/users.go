@@ -196,7 +196,7 @@ func (s *server) loginHandler(w http.ResponseWriter, r *http.Request) {
 	err = c.Find(bson.M{"$and": []bson.M{bson.M{"username": newLogin.Username}, bson.M{"hash": hashedPasswd}}}).One(&queryResult)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Credentials not valid.\"}\n")
+		fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Login not valid.\"}\n")
 		return
 	}
 
@@ -209,13 +209,6 @@ func (s *server) loginHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}\n")
 		return
 	}
-	cookie := &http.Cookie{
-		Name:     "access_token",
-		Value:    token,
-		Path:     "/",
-		HttpOnly: true,
-	}
-	http.SetCookie(w, cookie)
-	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "{\"accesToken\": \"%s\"}\n", token)
 	return
 }
