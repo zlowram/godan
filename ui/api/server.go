@@ -63,7 +63,7 @@ func (s *server) start() error {
 
 	m.SetGlobalCors(&vestigo.CorsAccessControl{
 		AllowOrigin:      []string{"*"},
-		AllowCredentials: true,
+		AllowCredentials: false,
 		MaxAge:           3600 * time.Second,
 		AllowHeaders:     []string{"Authorization", "Content-Type"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
@@ -71,27 +71,27 @@ func (s *server) start() error {
 
 	m.Get("/users/:id", orujo.NewPipe(
 		orujo.M(logHandler),
-		//s.auth,
+		s.auth,
 		http.HandlerFunc(s.getUserHandler)).ServeHTTP,
 	)
 	m.Put("/users/:id", orujo.NewPipe(
 		orujo.M(logHandler),
-		//s.auth,
+		s.auth,
 		http.HandlerFunc(s.updateUserHandler)).ServeHTTP,
 	)
 	m.Delete("/users/:id", orujo.NewPipe(
 		orujo.M(logHandler),
-		//s.auth,
+		s.auth,
 		http.HandlerFunc(s.deleteUserHandler)).ServeHTTP,
 	)
 	m.Get("/users", orujo.NewPipe(
 		orujo.M(logHandler),
-		//s.auth,
+		s.auth,
 		http.HandlerFunc(s.getUsersHandler)).ServeHTTP,
 	)
 	m.Post("/users", orujo.NewPipe(
 		orujo.M(logHandler),
-		//s.auth,
+		s.auth,
 		http.HandlerFunc(s.newUserHandler)).ServeHTTP,
 	)
 	m.Post("/login", orujo.NewPipe(
@@ -101,31 +101,30 @@ func (s *server) start() error {
 
 	m.Post("/tasks", orujo.NewPipe(
 		orujo.M(logHandler),
-		//s.auth,
+		s.auth,
 		http.HandlerFunc(s.newTaskHandler)).ServeHTTP,
 	)
 	m.Get("/ips/:ip", orujo.NewPipe(
 		orujo.M(logHandler),
-		//s.auth,
+		s.auth,
 		http.HandlerFunc(s.getIpHandler)).ServeHTTP,
 	)
 	m.Get("/ips", orujo.NewPipe(
 		orujo.M(logHandler),
-		//s.auth,
+		s.auth,
 		http.HandlerFunc(s.getIpHandler)).ServeHTTP,
 	)
 	m.Get("/status", orujo.NewPipe(
 		orujo.M(logHandler),
-		//s.auth,
+		s.auth,
 		http.HandlerFunc(s.getStatusHandler)).ServeHTTP,
 	)
 	m.Post("/status", orujo.NewPipe(
 		orujo.M(logHandler),
-		//s.auth,
+		s.auth,
 		http.HandlerFunc(s.setStatusHandler)).ServeHTTP,
 	)
 
-	//http.Handle("/", m)
 	fmt.Println("Listening on " + s.config.Local.Host + ":" + s.config.Local.Port + "...")
 	log.Fatalln(http.ListenAndServe(s.config.Local.Host+":"+s.config.Local.Port, m))
 
