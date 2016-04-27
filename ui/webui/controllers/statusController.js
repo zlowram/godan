@@ -1,13 +1,25 @@
 var godan_api = "http://localhost:8000/";
 
-angular.module('Godan').controller('StatusCtrl', ["$scope", "$resource", "$interval", "$uibModal", "$log", function StatusCtrl($scope, $resource, $interval, $uibModal, $log) {
+angular.module('Godan').controller('StatusCtrl', ["$scope", "$resource", "$interval", "$uibModal", "$window", function StatusCtrl($scope, $resource, $interval, $uibModal, $window) {
 	var url = godan_api + "status";
-	$scope.statusTable = $resource(url, {}, {}).query();
+	$scope.statusTable = $resource(url, {}, {
+		query: {
+			method: 'GET',
+			isArray: true,
+			headers: {'Authorization': 'Bearer ' + $window.sessionStorage.token}
+		}
+	}).query();
 
     refresh = $interval(function () {
-	freshTable = $resource(url, {}, {}).query();
+	freshTable = $resource(url, {}, {
+		query:{
+			method: 'GET',
+			isArray: true,
+			headers: {'Authorization': 'Bearer ' + $window.sessionStorage.token}
+		}
+	}).query();
+
 	freshTable.$promise.then(function(result) {
-		console.log("Refresh!");
 		$scope.statusTable = result;
 		$scope.$applyAsync();
 	});
@@ -49,9 +61,15 @@ angular.module('Godan').controller('ModalInstanceCtrl3', function ($scope, $reso
   $scope.info = element.Info;
   $scope.running = element.Running;
   refresh = $interval(function () {
-	freshStatus = $resource(url, {}, {}).query();
+	freshStatus = $resource(url, {}, {
+		query: {
+			method: 'GET',
+			isArray: true,
+			headers: {'Authorization': 'Bearer ' + $window.sessionStorage.token}
+		}
+	}).query();
+
 	freshStatus.$promise.then(function(result) {
-		console.log("ASD");
 		$scope.tasks = result[0].Tasks;
 		$scope.info = result[0].Info;
 		$scope.running = result[0].Running;
@@ -71,7 +89,13 @@ angular.module('Godan').controller('ModalInstanceCtrl3', function ($scope, $reso
 			"target": element.Name,
 			"command": $scope.newStatus,
 	  }
-	  var statusSet = $resource(url, {}, {}).save(JSON.stringify(data));
+	  var statusSet = $resource(url, {}, {
+		  save: {
+			  method: 'POST',
+			  headers: {'Authorization': 'Bearer ' + $window.sessionStorage.token}
+		  }
+	  }).save(JSON.stringify(data));
+
 	  statusSet.$promise.then(function(result) {
 			console.log("Status updated!")
 	  });

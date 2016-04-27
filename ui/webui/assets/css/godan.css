@@ -114,3 +114,13 @@ body {
 	margin-right: 20px;	
 	margin-left: 20px;	
 }
+
+.login-form {
+	max-width: 330px;
+	margin: 0 auto;
+}
+
+.login-form .form-group {
+	margin-top: 20px;
+	margin-right: 20px;	
+}

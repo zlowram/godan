@@ -1,6 +1,6 @@
 var godan_api = "http://localhost:8000/";
 
-angular.module('Godan').controller('QueriesCtrl', ["$scope", "$resource", "$uibModal", "$log", function QueriesCtrl($scope, $resource, $uibModal, $log) {
+angular.module('Godan').controller('QueriesCtrl', ["$scope", "$resource", "$uibModal", "$window", function QueriesCtrl($scope, $resource, $uibModal, $window) {
 
 	$scope.animationsEnabled = true;
 
@@ -26,7 +26,13 @@ angular.module('Godan').controller('QueriesCtrl', ["$scope", "$resource", "$uibM
 			query += "?"+$.param(params);
 		}
 
-		$scope.resultsTable = $resource(query, {}, {}).query();
+		$scope.resultsTable = $resource(query, {}, {
+			query: {
+				method: 'GET',
+				isArray: true,
+				headers: {'Authorization': 'Bearer ' + $window.sessionStorage.token}
+			}
+		}).query();
 	}
 
 	$scope.rowClicked = function(element) {

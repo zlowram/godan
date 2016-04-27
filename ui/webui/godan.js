@@ -2,8 +2,17 @@ angular.module('Godan', ['ngResource', 'ngAnimate', 'ngTouch', 'ui.bootstrap', '
 
 var godan_api = "http://localhost:8000/";
 
+angular.module('Godan').config(['$httpProvider', function($httpProvider) {
+	$httpProvider.defaults.withCredentials = false;	
+}]);
+
+
 angular.module('Godan').config(['$routeProvider', function($routeProvider) {
 	$routeProvider.
+		when('/login', {
+			templateUrl: 'login.html',
+			controller: 'LoginCtrl',
+		}).
 		when('/users', {
 			templateUrl: 'users.html',
 			controller: 'UsersCtrl',

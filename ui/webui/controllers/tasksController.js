@@ -1,6 +1,6 @@
 var godan_api = "http://localhost:8000/";
 
-angular.module('Godan').controller('TasksCtrl', ["$scope", "$resource", "$uibModal", "$log", function TasksCtrl($scope, $resource, $uibModal, $log) {
+angular.module('Godan').controller('TasksCtrl', ["$scope", "$resource", "$uibModal", "$window", function TasksCtrl($scope, $resource, $uibModal, $window) {
 
 	$scope.animationsEnabled = true;
 
@@ -11,7 +11,13 @@ angular.module('Godan').controller('TasksCtrl', ["$scope", "$resource", "$uibMod
 			"ports": $scope.taskPorts.split("\n"),
 		}
 
-		var taskResult = $resource(url, {}, {}).save(task);
+		var taskResult = $resource(url, {}, {
+			save: {
+				method: 'POST',
+				headers: {'Authorization': 'Bearer ' + $window.sessionStorage.token}
+			}
+		}).save(task);
+
 		taskResult.$promise.then(function(result) {
 			if (result.status == "success") {
 				$uibModal.open({
