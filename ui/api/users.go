@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/context"
 
@@ -14,9 +13,16 @@ import (
 )
 
 func (s *server) getUsersHandler(w http.ResponseWriter, r *http.Request) {
+	// Auhtorization check
+	user := context.Get(r, "user").(map[string]string)
+	if user["role"] != "admin" {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Access not authorized.\"}\n")
+		return
+	}
 	c := s.db.DB("test").C("users")
 	result := []User{}
-	err := c.Find(bson.M{}).Select(bson.M{"_id": 0, "userid": 0, "hash": 0, "role": 0}).All(&result)
+	err := c.Find(bson.M{}).Select(bson.M{"_id": 0, "password": 0}).All(&result)
 	if err != nil {
 		fmt.Fprintln(w, "{}")
 		return
@@ -27,15 +33,10 @@ func (s *server) getUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) getUserHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get(":id")
-	if _, err := strconv.Atoi(id); err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "{\"code\":\"404\",\"title\":\"Not Found\",\"detail\":\"User not found.\"}\n")
-		return
-	}
 	// Auhtorization check
+	username := r.URL.Query().Get(":username")
 	user := context.Get(r, "user").(map[string]string)
-	if user["role"] != "admin" && user["userid"] != id {
+	if user["role"] != "admin" && user["username"] != username {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Access not authorized.\"}\n")
 		return
@@ -43,7 +44,7 @@ func (s *server) getUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	c := s.db.DB("test").C("users")
 	result := User{}
-	err := c.Find(bson.M{"userid": id}).Select(bson.M{"_id": 0, "userid": 0, "hash": 0, "role": 0}).One(&result)
+	err := c.Find(bson.M{"username": username}).Select(bson.M{"_id": 0, "password": 0, "role": 0}).One(&result)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "{\"code\":\"404\",\"title\":\"Not Found\",\"detail\":\"User not found.\"}\n")
@@ -73,12 +74,12 @@ func (s *server) newUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h := sha256.New()
-	h.Write([]byte(newUser.Hash))
-	newUser.Hash = hex.EncodeToString(h.Sum(nil))
+	h.Write([]byte(newUser.Password))
+	newUser.Password = hex.EncodeToString(h.Sum(nil))
 
 	c := s.db.DB("test").C("users")
 	queryResult := User{}
-	err = c.Find(bson.M{"$or": []bson.M{bson.M{"email": newUser.Email}, bson.M{"username": newUser.Username}}}).One(&queryResult)
+	err = c.Find(bson.M{"username": newUser.Username}).One(&queryResult)
 	if err == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"User already exists.\"}\n")
@@ -91,27 +92,20 @@ func (s *server) newUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Location", "/users/"+newUser.UserId)
+	w.Header().Set("Location", "/users/"+newUser.Username)
 	return
 }
 
 func (s *server) updateUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Auhtorization check
-	// TODO: Granularize the auth checks
+	username := r.URL.Query().Get(":username")
 	user := context.Get(r, "user").(map[string]string)
-	if user["role"] != "admin" {
+	if user["role"] != "admin" && user["username"] != username {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Access not authorized.\"}\n")
 		return
 	}
 
-	id := r.URL.Query().Get(":id")
-	fmt.Println("Updating user:", id)
-	if _, err := strconv.Atoi(id); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"Bad request.\"}\n")
-		return
-	}
 	decoder := json.NewDecoder(r.Body)
 	var updateUser User
 	err := decoder.Decode(&updateUser)
@@ -122,23 +116,28 @@ func (s *server) updateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	c := s.db.DB("test").C("users")
 	current := User{}
-	err = c.Find(bson.M{"userid": id}).One(&current)
+	err = c.Find(bson.M{"username": username}).One(&current)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "{\"code\":\"404\",\"title\":\"Not Found\",\"detail\":\"User not found.\"}\n")
 		return
 	}
 
-	if updateUser.Username != "" {
+	if updateUser.Username != "" && user["role"] == "admin" {
 		current.Username = updateUser.Username
 	}
 	if updateUser.Email != "" {
 		current.Email = updateUser.Email
 	}
-	if updateUser.Hash != "" {
-		current.Hash = updateUser.Hash
+	if updateUser.Password != "" {
+		h := sha256.New()
+		h.Write([]byte(updateUser.Password))
+		current.Password = hex.EncodeToString(h.Sum(nil))
 	}
-	userQuery := bson.M{"userid": id}
+	if updateUser.Role != "" && user["role"] == "admin" {
+		current.Role = updateUser.Role
+	}
+	userQuery := bson.M{"username": username}
 	err = c.Update(userQuery, current)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -157,14 +156,9 @@ func (s *server) deleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := r.URL.Query().Get(":id")
-	if _, err := strconv.Atoi(id); err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "{\"code\":\"404\",\"title\":\"Not Found\",\"detail\":\"User not found.\"}\n")
-		return
-	}
+	username := r.URL.Query().Get(":username")
 	c := s.db.DB("test").C("users")
-	err := c.Remove(bson.M{"userid": id})
+	err := c.Remove(bson.M{"username": username})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}\n")
@@ -193,7 +187,7 @@ func (s *server) loginHandler(w http.ResponseWriter, r *http.Request) {
 	hashedPasswd := hex.EncodeToString(h.Sum(nil))
 	c := s.db.DB("test").C("users")
 	queryResult := User{}
-	err = c.Find(bson.M{"$and": []bson.M{bson.M{"username": newLogin.Username}, bson.M{"hash": hashedPasswd}}}).One(&queryResult)
+	err = c.Find(bson.M{"$and": []bson.M{bson.M{"username": newLogin.Username}, bson.M{"password": hashedPasswd}}}).One(&queryResult)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "{\"code\":\"401\",\"title\":\"Unauthorized\",\"detail\":\"Login not valid.\"}\n")
@@ -201,7 +195,7 @@ func (s *server) loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	claims := make(map[string]string)
-	claims["userid"] = queryResult.UserId
+	claims["username"] = queryResult.Username
 	claims["role"] = queryResult.Role
 	token, err := s.auth.NewToken(claims)
 	if err != nil {
@@ -209,6 +203,6 @@ func (s *server) loginHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}\n")
 		return
 	}
-	fmt.Fprintf(w, "{\"accesToken\": \"%s\"}\n", token)
+	fmt.Fprintf(w, "{\"username\": \"%s\", \"role\":\"%s\", \"accesToken\": \"%s\"}\n", queryResult.Username, queryResult.Role, token)
 	return
 }

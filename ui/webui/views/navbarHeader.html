@@ -1,3 +1,35 @@
+<script type="text/ng-template" id="profileModalTemplate">
+	<div class="modal-header">
+		<h3 class="modal-title">User profile</h3>
+	</div>
+	<div class="modal-body">
+		<form class="form">
+			<div class="form-group">
+				<label for="username">Username</label>
+				<input type="text" class="form-control" id="username" ng-model="user.Username" disabled>
+			</div>
+			<div class="form-group">
+				<label for="email">Email</label>
+				<input type="text" class="form-control" id="email" ng-model="user.Email" autofocus>
+			</div>
+			<div class="form-group">
+				<label for="newpasswd">New password</label>
+				<input type="password" class="form-control" id="newpasswd" ng-model="user.NewPassword" placeholder="New password">
+			</div>
+			<div class="form-group">
+				<label for="newpasswdconf">New password confirmation</label>
+				<input type="password" class="form-control" id="newpasswdconf" ng-model="user.NewPasswordConf" placeholder="New password confirmation">
+			</div>
+			<div class="alert alert-danger form-group" ng-if="passwordMismatch">
+				<strong>Error!</strong> Passwords does not match.
+			</div>
+		</form>
+	</div>
+	<div class="modal-footer">
+		<button class="btn btn-success" type="submit" ng-click="submitChanges()">Update profile</button>
+		<button class="btn btn-primary" type="button" ng-click="closeit()">Cancel</button>
+	</div>
+</script>
 <nav class="navbar navbar-inverse navbar-fixed-top" ng-controller="NavCtrl">
 	<div class="container-fluid">
 		<div class="navbar-header">
@@ -5,7 +37,7 @@
 		</div>
 		<div id="navbar" class="navbar-collapse collapse" ng-if="isLogged()">
 			<ul class="nav navbar-nav navbar-right">
-				<li><a href="#">Profile</a></li>
+				<li><a href="#" ng-click="profile()">{{getUsername()}}</a></li>
 				<li><a href="#" ng-click="logout()">Logout</a></li>
 			</ul>
 		</div>

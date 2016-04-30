@@ -3,6 +3,8 @@ var godan_api = "http://localhost:8000/";
 angular.module('Godan').controller('StatusCtrl', ["$scope", "$resource", "$interval", "$uibModal", "$window", function StatusCtrl($scope, $resource, $interval, $uibModal, $window) {
 	if (!$window.sessionStorage.token) $window.location.href = '#/login';
 
+	$scope.animationsEnabled = true;
+
 	var url = godan_api + "status";
 	$scope.statusTable = $resource(url, {}, {
 		query: {
@@ -49,7 +51,7 @@ angular.module('Godan').controller('StatusCtrl', ["$scope", "$resource", "$inter
 	};
 }]);
 
-angular.module('Godan').controller('ModalInstanceCtrl3', function ($scope, $resource, $uibModalInstance, $interval, element, url) {
+angular.module('Godan').controller('ModalInstanceCtrl3', function ($scope, $resource, $uibModalInstance, $interval, $window, element, url) {
   $scope.$on("modal.closing", function() {
 	$interval.cancel(refresh);
   });
@@ -97,9 +99,5 @@ angular.module('Godan').controller('ModalInstanceCtrl3', function ($scope, $reso
 			  headers: {'Authorization': 'Bearer ' + $window.sessionStorage.token}
 		  }
 	  }).save(JSON.stringify(data));
-
-	  statusSet.$promise.then(function(result) {
-			console.log("Status updated!")
-	  });
   }
 });

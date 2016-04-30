@@ -3,10 +3,9 @@ package main
 import "gopkg.in/mgo.v2/bson"
 
 type User struct {
-	ID       bson.ObjectId `bson:"_id,omitempty"`
-	UserId   string
+	ID       bson.ObjectId `bson:"_id,omitempty" json:"-"`
 	Username string
 	Email    string
-	Hash     string
+	Password string
 	Role     string
 }

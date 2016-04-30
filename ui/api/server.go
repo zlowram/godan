@@ -35,14 +35,13 @@ func newServer(config Config) *server {
 	err = c.Find(bson.M{}).One(&queryResult)
 	if err != nil {
 		defaultUser := User{
-			UserId:   "0",
 			Username: "admin",
 			Email:    "admin@localhost.com",
 			Role:     "admin",
 		}
 		h := sha256.New()
 		h.Write([]byte("admin"))
-		defaultUser.Hash = hex.EncodeToString(h.Sum(nil))
+		defaultUser.Password = hex.EncodeToString(h.Sum(nil))
 		err = c.Insert(defaultUser)
 		if err != nil {
 			log.Fatal("Error adding default user:", err)
@@ -69,17 +68,17 @@ func (s *server) start() error {
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 	})
 
-	m.Get("/users/:id", orujo.NewPipe(
+	m.Get("/users/:username", orujo.NewPipe(
 		orujo.M(logHandler),
 		s.auth,
 		http.HandlerFunc(s.getUserHandler)).ServeHTTP,
 	)
-	m.Put("/users/:id", orujo.NewPipe(
+	m.Put("/users/:username", orujo.NewPipe(
 		orujo.M(logHandler),
 		s.auth,
 		http.HandlerFunc(s.updateUserHandler)).ServeHTTP,
 	)
-	m.Delete("/users/:id", orujo.NewPipe(
+	m.Delete("/users/:username", orujo.NewPipe(
 		orujo.M(logHandler),
 		s.auth,
 		http.HandlerFunc(s.deleteUserHandler)).ServeHTTP,
