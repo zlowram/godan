@@ -1,6 +1,7 @@
 var godan_api = "http://localhost:8000/";
 
 angular.module('Godan').controller('TasksCtrl', ["$scope", "$resource", "$uibModal", "$window", function TasksCtrl($scope, $resource, $uibModal, $window) {
+	if (!$window.sessionStorage.token) $window.location.href = '#/login';
 
 	$scope.animationsEnabled = true;
 

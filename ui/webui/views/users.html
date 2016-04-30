@@ -1,17 +1,19 @@
-<h2>Users</h2>
-<table class="table table-hover table-striped">
-	<thead>
-		<tr>
-			<th>#</th>
-			<th>Username</th>
-			<th>Email</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr ng-repeat="(i,s) in usersTable">
-			<th scope="row">{{i}}</th>
-			<td>{{s.Username}}</td>
-			<td>{{s.Email}}</td>
-		</tr>
-	</tbody>
-</table>
+<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+	<h2>Users</h2>
+	<table class="table table-hover table-striped">
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>Username</th>
+				<th>Email</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr ng-repeat="(i,s) in usersTable">
+				<th scope="row">{{i}}</th>
+				<td>{{s.Username}}</td>
+				<td>{{s.Email}}</td>
+			</tr>
+		</tbody>
+	</table>
+</div>

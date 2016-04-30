@@ -1,0 +1,13 @@
+<nav class="navbar navbar-inverse navbar-fixed-top" ng-controller="NavCtrl">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<a class="navbar-brand" href="#">Godan Dashboard</a>
+		</div>
+		<div id="navbar" class="navbar-collapse collapse" ng-if="isLogged()">
+			<ul class="nav navbar-nav navbar-right">
+				<li><a href="#">Profile</a></li>
+				<li><a href="#" ng-click="logout()">Logout</a></li>
+			</ul>
+		</div>
+	</div>
+</nav>

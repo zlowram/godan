@@ -14,10 +14,11 @@ angular.module('Godan').controller('LoginCtrl', ["$scope", "$resource", "$uibMod
 		var taskResult = $resource(url, {}, {}).save(login_data);
 		taskResult.$promise.then(
 			function(result) {
-				// TODO: Redirect to index?
 				$window.sessionStorage.token = result.accesToken;
+				$window.location.href = '#/queries';
 			},
 			function(result) {
+				$scope.loginError = true;
 				delete $window.sessionStorage.token;
 			}
 		);

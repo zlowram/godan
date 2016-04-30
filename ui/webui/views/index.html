@@ -24,32 +24,13 @@
 	</head>
 
 	<body>
-		<nav class="navbar navbar-inverse navbar-fixed-top">
-			<div class="container-fluid">
-				<div class="navbar-header">
-					<a class="navbar-brand" href="#">Godan Dashboard</a>
-				</div>
-				<div id="navbar" class="navbar-collapse collapse">
-					<ul class="nav navbar-nav navbar-right">
-						<li><a href="#">Profile</a></li>
-					</ul>
-				</div>
-			</div>
-		</nav>
 
-		<div class="container-fluid">
+		<div ng-include="'navbarHeader.html'"></div>
+
+		<div class="container-fluid" ng-controller="NavCtrl">
 			<div class="row">
-				<div class="col-sm-3 col-md-2 sidebar" ng-controller="NavCtrl">
-					<ul class="nav nav-sidebar">
-						<li ng-class="{ active: isActive('/users') }"><a href="#/users">Users</a></li>
-						<li ng-class="{ active: isActive('/tasks') }"><a href="#/tasks">Tasks</a></li>
-						<li ng-class="{ active: isActive('/status') }"><a href="#/status">Status</a></li>
-						<li ng-class="{ active: isActive('/queries') }"><a href="#/queries">Queries</a></li>
-					</ul>
-				</div>
-				<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-					<div ng-view></div>
-				</div>
+				<div ng-include="'navbarSide.html'"></div>
+				<div ng-view></div>
 			</div>
 		</div>
 	</body>

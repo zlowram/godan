@@ -1,0 +1,8 @@
+<div class="col-sm-3 col-md-2 sidebar" ng-if="isLogged()">
+	<ul class="nav nav-sidebar">
+		<li ng-class="{ active: isActive('/users') }"><a href="#/users">Users</a></li>
+		<li ng-class="{ active: isActive('/tasks') }"><a href="#/tasks">Tasks</a></li>
+		<li ng-class="{ active: isActive('/status') }"><a href="#/status">Status</a></li>
+		<li ng-class="{ active: isActive('/queries') }"><a href="#/queries">Queries</a></li>
+	</ul>
+</div>

@@ -1,0 +1,81 @@
+<script type="text/ng-template" id="modalTemplate">
+	<div class="modal-header">
+		<h3 class="modal-title">Detailed view</h3>
+	</div>
+	<div class="modal-body">
+		<table class="table">
+			<thead>
+				<tr>
+					<th>IP</th>
+					<th>Port</th>
+					<th>Service</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="r in elements">
+					<td>{{r.Ip}}</td>
+					<td>{{r.Port}}</td>
+					<td>{{r.Service}}</td>
+				</tr>
+			</tbody>
+		</table>
+		<textarea readonly class="form-control" rows="30" style="min-width:100%;resize:none" ng-model="content"></textarea>
+	</div>
+	<div class="modal-footer">
+		<button class="btn btn-primary" type="button" ng-click="closeit()">Close</button>
+	</div>
+</script>
+<script type="text/ng-template" id="resultsModalTemplate">
+	<div class="modal-header">
+		<h3 class="modal-title">{{title}}</h3>
+	</div>
+	<div class="modal-body">
+		<p>{{message}}</p>
+	</div>
+	<div class="modal-footer">
+		<button class="btn btn-primary" type="button" ng-click="closeit()">OK</button>
+	</div>
+</script>
+<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+	<h2>Queries</h2>
+	<form class="form-inline query-form" ng-submit="submitQuery()">
+		<div class="form-group">
+			<label for="inputIP">IP</label>
+			<input type="text" class="form-control" ng-model="inputIP" id="inputIP" placeholder="127.0.0.1">
+		</div>
+		<div class="form-group">
+			<label for="inputPort">Port</label>
+			<input type="text" class="form-control" ng-model="inputPort" id="inputPort" placeholder="8080">
+		</div>
+		<div class="form-group">
+			<label for="inputService">Service</label>
+			<input type="text" class="form-control" ng-model="inputService" id="inputService" placeholder="HTTP">
+		</div>
+		<div class="form-group">
+			<label for="inputRegex">Regex</label>
+			<input type="text" class="form-control" ng-model="inputRegexp" id="inputRegexp" placeholder=".*tomcat.*">
+		</div>
+		<div class="form-group">
+			<button type="submit" class="btn btn-primary">Search</button>
+		</div>
+	</form>
+
+	<table class="table table-striped table-hover query-table">
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>IP</th>
+				<th>Port</th>
+				<th>Service</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr ng-repeat="(i,r) in resultsTable" ng-click="rowClicked(r)">
+				<th scope="row">{{i}}</th>
+				<td>{{r.Ip}}</td>
+				<td>{{r.Port}}</td>
+				<td>{{r.Service}}</td>
+			</tr>
+		</tbody>
+	</table>
+</div>

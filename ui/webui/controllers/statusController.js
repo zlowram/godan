@@ -1,6 +1,8 @@
 var godan_api = "http://localhost:8000/";
 
 angular.module('Godan').controller('StatusCtrl', ["$scope", "$resource", "$interval", "$uibModal", "$window", function StatusCtrl($scope, $resource, $interval, $uibModal, $window) {
+	if (!$window.sessionStorage.token) $window.location.href = '#/login';
+
 	var url = godan_api + "status";
 	$scope.statusTable = $resource(url, {}, {
 		query: {

@@ -1,6 +1,7 @@
 var godan_api = "http://localhost:8000/";
 
 angular.module('Godan').controller('QueriesCtrl', ["$scope", "$resource", "$uibModal", "$window", function QueriesCtrl($scope, $resource, $uibModal, $window) {
+	if (!$window.sessionStorage.token) $window.location.href = '#/login';
 
 	$scope.animationsEnabled = true;
 
@@ -26,13 +27,41 @@ angular.module('Godan').controller('QueriesCtrl', ["$scope", "$resource", "$uibM
 			query += "?"+$.param(params);
 		}
 
-		$scope.resultsTable = $resource(query, {}, {
+		var queryResult = $resource(query, {}, {
 			query: {
 				method: 'GET',
 				isArray: true,
 				headers: {'Authorization': 'Bearer ' + $window.sessionStorage.token}
 			}
 		}).query();
+		queryResult.$promise.then(
+			function(result) {
+				if (result.length == 0) {
+					$uibModal.open({
+						animation: $scope.animationsEnabled,
+						templateUrl: 'resultsModalTemplate',
+						controller: 'ResultsModalInstanceCtrl',
+						resolve: {
+							title: function() { return "No results"; },
+							message: function() { return "No entries matched the query"; }
+						}
+					});
+				} else {
+					$scope.resultsTable = result;
+				}
+			},
+			function(result) {
+				$uibModal.open({
+					animation: $scope.animationsEnabled,
+					templateUrl: 'resultsModalTemplate',
+					controller: 'abcd',
+					resolve: {
+						title: function() { return "Error!"; },
+						message: function() { return "There was an error sending the query"; }
+					}
+				});
+			}
+		);
 	}
 
 	$scope.rowClicked = function(element) {
@@ -58,4 +87,12 @@ angular.module('Godan').controller('ModalInstanceCtrl', function ($scope, $uibMo
   };
 	$scope.content = atob(element.Content); 
 	$scope.elements = [element];
+});
+
+angular.module('Godan').controller('ResultsModalInstanceCtrl', function ($scope, $uibModalInstance, title, message) {
+  $scope.closeit = function () {
+    $uibModalInstance.close();
+  };
+  $scope.title = title;
+  $scope.message = message;
 });

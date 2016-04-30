@@ -26,7 +26,7 @@ angular.module('Godan').config(['$routeProvider', function($routeProvider) {
 			controller: 'StatusCtrl',
 		}).
 		when('/queries', {
-			templateUrl: 'ips.html',
+			templateUrl: 'queries.html',
 			controller: 'QueriesCtrl',
 		}).
 		otherwise({
