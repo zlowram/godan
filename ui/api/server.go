@@ -35,12 +35,12 @@ func newServer(config Config) *server {
 	err = c.Find(bson.M{}).One(&queryResult)
 	if err != nil {
 		defaultUser := User{
-			Username: "admin",
+			Username: config.DefaultUser.Username,
 			Email:    "admin@localhost.com",
 			Role:     "admin",
 		}
 		h := sha256.New()
-		h.Write([]byte("admin"))
+		h.Write([]byte(config.DefaultUser.Password))
 		defaultUser.Password = hex.EncodeToString(h.Sum(nil))
 		err = c.Insert(defaultUser)
 		if err != nil {

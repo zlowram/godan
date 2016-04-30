@@ -1,0 +1,15 @@
+# Godan server configuration file
+
+[Local]
+Host = "localhost"
+Port = "2234"
+PrivateKey = "keys/sample_private.pem"
+PublicKey = "keys/sample_public.pem"
+
+[DB]
+Host = "localhost"
+Port = "27017"
+
+[Godan]
+Host = "localhost"
+Port = "8080"

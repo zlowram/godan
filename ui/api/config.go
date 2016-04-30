@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	Local Local
-	DB    Database
-	Godan Godan
+	Local       Local
+	DB          Database
+	Godan       Godan
+	DefaultUser DefaultUser
 }
 
 type Local struct {
@@ -27,6 +28,11 @@ type Database struct {
 type Godan struct {
 	Host string
 	Port string
+}
+
+type DefaultUser struct {
+	Username string
+	Password string
 }
 
 func loadConfig(configFile string) (Config, error) {
