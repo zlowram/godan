@@ -10,23 +10,23 @@ angular.module('Godan').config(['$httpProvider', function($httpProvider) {
 angular.module('Godan').config(['$routeProvider', function($routeProvider) {
 	$routeProvider.
 		when('/login', {
-			templateUrl: 'login.html',
+			templateUrl: 'login/login.html',
 			controller: 'LoginCtrl',
 		}).
 		when('/users', {
-			templateUrl: 'users.html',
+			templateUrl: 'users/users.html',
 			controller: 'UsersCtrl',
 		}).
 		when('/tasks', {
-			templateUrl: 'tasks.html',
+			templateUrl: 'tasks/tasks.html',
 			controller: 'TasksCtrl',
 		}).
 		when('/status', {
-			templateUrl: 'status.html',
+			templateUrl: 'status/status.html',
 			controller: 'StatusCtrl',
 		}).
 		when('/queries', {
-			templateUrl: 'queries.html',
+			templateUrl: 'queries/queries.html',
 			controller: 'QueriesCtrl',
 		}).
 		otherwise({
