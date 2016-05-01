@@ -13,3 +13,7 @@ Port = "27017"
 [Godan]
 Host = "localhost"
 Port = "8080"
+
+[DefaultUser]
+Username = "admin"
+Password = "admin"
