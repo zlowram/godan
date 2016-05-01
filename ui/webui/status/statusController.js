@@ -33,7 +33,7 @@ angular.module('Godan').controller('StatusCtrl', ["$scope", "$resource", "$inter
 		$interval.cancel(refresh);
 	});
 
-	$scope.rowClicked = function(element) {
+	$scope.rowClicked = function(clicked) {
 		var modalInstance = $uibModal.open({
 			animation: $scope.animationsEnabled,
 			templateUrl: 'statusModalTemplate',
@@ -41,7 +41,7 @@ angular.module('Godan').controller('StatusCtrl', ["$scope", "$resource", "$inter
 			size: 'lg',
 			resolve: {
 				element: function() {
-					return element;
+					return clicked;
 				},
 				url: function() {
 					return url;
