@@ -32,4 +32,4 @@ create:
 	cd docker && ./run_containers.sh 
 
 destroy:
-	docker kill db rabbitmq godan_server godan_worker godan_api_ui ui_db && docker rm db rabbitmq godan_server godan_worker godan_api_ui ui_db
+	docker kill db rabbitmq godan_server godan_worker godan_api_ui godan_web_ui ui_db && docker rm db rabbitmq godan_server godan_worker godan_api_ui godan_web_ui ui_db
