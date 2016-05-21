@@ -1,0 +1,27 @@
+# Godan server configuration file
+
+[Local]
+Host = "0.0.0.0"
+Port = "8080"
+
+[Rpcmq]
+Host = "rabbitmq"
+Port = "5672"
+MsgQueue = "rpc-queue" 
+ReplyQueue = "rpc-client" 
+Exchange = "rpc-exchange"
+ExchangeType = "direct" 
+
+[Monmq]
+Host = "rabbitmq"
+Port = "5672"
+ReplyQueue = "mon-replies" 
+Exchange = "mon-exchange"
+
+[DB]
+Type = "elasticsearch"
+Host = "db"
+Port = "9200"
+Username = "godan"
+Password = "change_this_pwd!"
+Name = "godan"

@@ -47,9 +47,16 @@ func (s *server) start() error {
 	}
 	defer s.supervisor.Shutdown()
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4,utf8", s.config.DB.Username, s.config.DB.Password, s.config.DB.Host, s.config.DB.Port, s.config.DB.Name)
-	s.pm = persistence.NewMySQLPersistenceManager(dsn)
-	defer s.pm.Close()
+	if s.config.DB.Type == "mysql" {
+		dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4,utf8", s.config.DB.Username, s.config.DB.Password, s.config.DB.Host, s.config.DB.Port, s.config.DB.Name)
+		s.pm = persistence.NewMySQLPersistenceManager(dsn)
+		defer s.pm.Close()
+	} else if s.config.DB.Type == "elasticsearch" {
+		esUrl := fmt.Sprintf("http://%s:%s", s.config.DB.Host, s.config.DB.Port)
+		s.pm = persistence.NewElasticPersistenceManager(esUrl, s.config.DB.Name)
+	} else {
+		log.Fatalf("Invalid DB Type %s. Check the config", s.config.DB.Type)
+	}
 
 	m := vestigo.NewRouter()
 	logHandler := olog.NewLogHandler(s.logger, logLine)

@@ -1,0 +1,5 @@
+docker/docker-compose.yml
+docker/server/godanserver.toml
+docker/server/godanserver
+docker/ui/api/godanapiui
+docker/worker/godanworker

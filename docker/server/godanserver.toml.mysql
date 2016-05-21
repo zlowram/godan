@@ -19,6 +19,7 @@ ReplyQueue = "mon-replies"
 Exchange = "mon-exchange"
 
 [DB]
+Type = "mysql"
 Host = "db"
 Port = "3306"
 Username = "godan"

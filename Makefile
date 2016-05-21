@@ -29,7 +29,10 @@ build-web-ui:
 	cd docker && docker-compose build godan_web_ui
 
 create:
-	cd docker && ./run_containers.sh 
+	cd docker && ./run_containers.sh mysql
+
+create-es:
+	cd docker && ./run_containers.sh es
 
 destroy:
 	cd docker && ./destroy_containers.sh

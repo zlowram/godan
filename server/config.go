@@ -35,6 +35,7 @@ type Monmq struct {
 }
 
 type Database struct {
+	Type     string
 	Username string
 	Password string
 	Host     string
