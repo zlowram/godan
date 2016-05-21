@@ -1,13 +1,13 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/zlowram/godan/persistence"
+
 	"github.com/husobee/vestigo"
 	"github.com/jroimartin/monmq"
 	"github.com/jroimartin/orujo"
@@ -20,7 +20,7 @@ type server struct {
 	logger     *log.Logger
 	client     *rpcmq.Client
 	supervisor *monmq.Supervisor
-	database   *sql.DB
+	pm         persistence.PersistenceManager
 }
 
 func newServer(cfg Config) *server {
@@ -48,16 +48,8 @@ func (s *server) start() error {
 	defer s.supervisor.Shutdown()
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4,utf8", s.config.DB.Username, s.config.DB.Password, s.config.DB.Host, s.config.DB.Port, s.config.DB.Name)
-	s.database, err = sql.Open("mysql", dsn)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer s.database.Close()
-
-	_, err = s.database.Exec("CREATE TABLE IF NOT EXISTS banners (ip INT UNSIGNED, port INT UNSIGNED, service VARCHAR(50), content MEDIUMTEXT)")
-	if err != nil {
-		log.Fatal(err)
-	}
+	s.pm = persistence.NewMySQLPersistenceManager(dsn)
+	defer s.pm.Close()
 
 	m := vestigo.NewRouter()
 	logHandler := olog.NewLogHandler(s.logger, logLine)

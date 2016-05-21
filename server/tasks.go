@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
@@ -11,6 +10,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/zlowram/godan/model"
+	"github.com/zlowram/godan/persistence"
+
 	"github.com/jroimartin/rpcmq"
 )
 
@@ -19,10 +21,10 @@ const (
 )
 
 type taskManager struct {
-	ctrl     *ctrlTable
-	wg       sync.WaitGroup
-	client   *rpcmq.Client
-	database *sql.DB
+	ctrl   *ctrlTable
+	wg     sync.WaitGroup
+	client *rpcmq.Client
+	pm     persistence.PersistenceManager
 }
 
 type Task struct {
@@ -30,11 +32,11 @@ type Task struct {
 	Ports []string `json:"ports"`
 }
 
-func newTaskManager(c *rpcmq.Client, d *sql.DB) *taskManager {
+func newTaskManager(c *rpcmq.Client, p persistence.PersistenceManager) *taskManager {
 	tm := &taskManager{
-		ctrl:     &ctrlTable{m: make(map[string]bool)},
-		client:   c,
-		database: d,
+		ctrl:   &ctrlTable{m: make(map[string]bool)},
+		client: c,
+		pm:     p,
 	}
 	return tm
 }
@@ -77,7 +79,7 @@ func (tm *taskManager) runTasks(task Task) {
 	go func() {
 		for !tm.ctrl.done() {
 			r := <-tm.client.Results()
-			banners := make([]banner, 100)
+			banners := make([]model.Banner, 100)
 			if err := json.Unmarshal(r.Data, &banners); err != nil {
 				log.Println(err)
 			}
@@ -89,10 +91,7 @@ func (tm *taskManager) runTasks(task Task) {
 				if b.Error != "" {
 					continue
 				}
-				_, err := tm.database.Exec("INSERT INTO banners (ip, port, service, content) VALUES (INET_ATON(?), ?, ?, ?)", b.Ip, b.Port, b.Service, b.Content)
-				if err != nil {
-					log.Fatal(err)
-				}
+				tm.pm.SaveBanner(b)
 			}
 
 			tm.ctrl.insert(r.UUID, true)
@@ -118,14 +117,6 @@ func (tm *taskManager) sendTask(task []byte) {
 	}
 
 	tm.ctrl.insert(uuid, false)
-}
-
-type banner struct {
-	Ip      string
-	Port    string
-	Service string
-	Content string
-	Error   string
 }
 
 type ctrlTable struct {

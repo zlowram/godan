@@ -1,15 +1,14 @@
 package main
 
 import (
-	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
-	"text/template"
+
+	"github.com/zlowram/godan/model"
 
 	"github.com/jroimartin/monmq"
 )
@@ -17,20 +16,6 @@ import (
 type MonmqCmd struct {
 	Target  string
 	Command string
-}
-
-type Filters struct {
-	Ip       string
-	Ports    []string
-	Services []string
-	Regexp   string
-}
-
-type Banner struct {
-	Ip      string
-	Port    string
-	Service string
-	Content string
 }
 
 func (s *server) tasksHandler(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +33,7 @@ func (s *server) tasksHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"Invalid json format.\"}]}\n")
 		return
 	}
-	tm := newTaskManager(s.client, s.database)
+	tm := newTaskManager(s.client, s.pm)
 	go tm.runTasks(task)
 	fmt.Fprintln(w, "{\"status\": \"success\"}")
 }
@@ -99,58 +84,12 @@ func (s *server) setStatusHandler(w http.ResponseWriter, r *http.Request) {
 func (s *server) queryHandler(w http.ResponseWriter, r *http.Request) {
 	f := extractFilters(r)
 
-	t := template.Must(template.New("query").Parse(queryTemplate))
-	query := &bytes.Buffer{}
-	err := t.Execute(query, f)
+	result, err := s.pm.QueryBanners(f)
 	if err != nil {
-		log.Println("Error executing template:", err)
+		log.Println("Error querying banners:", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
 		return
-	}
-
-	stmt, err := s.database.Prepare(query.String())
-	if err != nil {
-		log.Println("Error preparing statement:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
-		return
-	}
-
-	data := make([]interface{}, 0, len(f.Ports))
-	if f.Ip != "" {
-		data = append(data, f.Ip)
-	}
-	for _, v := range f.Ports {
-		data = append(data, v)
-	}
-	for _, v := range f.Services {
-		data = append(data, v)
-	}
-	if f.Regexp != "" {
-		data = append(data, f.Regexp)
-	}
-
-	rows, err := stmt.Query(data...)
-	if err != nil {
-		log.Println("Error querying:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
-		return
-	}
-	defer rows.Close()
-
-	result := make([]Banner, 0)
-	for rows.Next() {
-		var curr Banner
-		if err := rows.Scan(&curr.Ip, &curr.Port, &curr.Service, &curr.Content); err != nil {
-			log.Println("Error scanning the query:", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
-			return
-		}
-		curr.Content = base64.StdEncoding.EncodeToString([]byte(curr.Content))
-		result = append(result, curr)
 	}
 	jsoned, err := json.Marshal(result)
 	if err != nil {
@@ -162,16 +101,7 @@ func (s *server) queryHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(jsoned))
 }
 
-const (
-	queryTemplate = `SELECT DISTINCT INET_NTOA(ip), port, service, content FROM banners
-{{if or .Ip .Ports .Services .Regexp}} WHERE{{end}}
-{{if .Ip}} ip = INET_ATON((?)){{end}}
-{{if and .Ip .Ports}} AND{{end}}{{if .Ports}} port IN ({{range $i, $v := .Ports}}{{if $i}},{{end}}?{{end}}){{end}}
-{{if and .Services (or .Ip .Ports)}} AND{{end}}{{if .Services}} service IN ({{range $i, $v := .Services}}{{if $i}},{{end}}?{{end}}){{end}}
-{{if and .Regexp (or .Ip .Ports .Services)}} AND{{end}}{{if .Regexp}} content regexp (?){{end}};`
-)
-
-func extractFilters(request *http.Request) Filters {
+func extractFilters(request *http.Request) model.Filters {
 	var p, s []string
 	var r string
 
@@ -189,7 +119,7 @@ func extractFilters(request *http.Request) Filters {
 	if values["regexp"] != nil {
 		r = values["regexp"][0]
 	}
-	filters := Filters{
+	filters := model.Filters{
 		Ip:       ip,
 		Ports:    p,
 		Services: s,
