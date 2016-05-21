@@ -34,6 +34,7 @@ godan_api_ui:
     - "8000:8000"
   links:
     - ui_db:ui_db
+    - godan_server:godan_server
 godan_web_ui:
   build: ./ui/webui/
   ports:
