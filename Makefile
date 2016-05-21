@@ -17,19 +17,19 @@ copy-web-ui:
 	cp -r ui/webui docker/ui/webui/godan_webui
 
 build-server:
-	cd docker/server/ && docker build -t zlowram/godanserver .
+	cd docker && docker-compose build godan_server
 
 build-worker:
-	cd docker/worker/ && docker build -t zlowram/godanworker .
+	cd docker && docker-compose build godan_worker
 
 build-ui:
-	cd docker/ui/api/ && docker build -t zlowram/godanapiui .
+	cd docker && docker-compose build godan_api_ui
 
 build-web-ui:
-	cd docker/ui/webui/ && docker build -t zlowram/godanwebui .
+	cd docker && docker-compose build godan_web_ui
 
 create:
 	cd docker && ./run_containers.sh 
 
 destroy:
-	docker kill db rabbitmq godan_server godan_worker godan_api_ui godan_web_ui ui_db && docker rm db rabbitmq godan_server godan_worker godan_api_ui godan_web_ui ui_db
+	cd docker && ./destroy_containers.sh

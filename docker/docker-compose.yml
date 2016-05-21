@@ -1,0 +1,42 @@
+db:
+  image: mysql
+  expose: 
+    - 3306
+  command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+  environment:
+    - MYSQL_ROOT_PASSWORD=change_this_pwd!
+    - MYSQL_USER=godan
+    - MYSQL_PASSWORD=change_this_pwd!
+    - MYSQL_DATABASE=godan
+rabbitmq:
+  image: rabbitmq:management
+  ports:
+    - "15672:15672"
+    - "5672:5672"
+godan_worker:
+  build: ./worker/
+  links:
+    - rabbitmq:rabbitmq
+godan_server:
+  build: ./server/
+  ports:
+    - "8080:8080"
+  links:
+    - rabbitmq:rabbitmq
+    - db:db
+ui_db:
+  image: mongo:3.0.4
+  ports:
+    - "27017:27017"
+godan_api_ui:
+  build: ./ui/api/
+  ports:
+    - "8000:8000"
+  links:
+    - ui_db:ui_db
+godan_web_ui:
+  build: ./ui/webui/
+  ports:
+    - "8081:80"
+  links:
+    - godan_api_ui:godan_api_ui
