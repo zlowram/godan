@@ -18,19 +18,22 @@ type MonmqCmd struct {
 	Command string
 }
 
+const (
+	InternalServerErrorString = "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}"
+	BadRequestString          = "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"Invalid json format.\"}"
+)
+
 func (s *server) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Println("Error reading body:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
+		http.Error(w, InternalServerErrorString, http.StatusInternalServerError)
 		return
 	}
 	var task Task
 	err = json.Unmarshal(data, &task)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"Invalid json format.\"}]}\n")
+		http.Error(w, BadRequestString, http.StatusBadRequest)
 		return
 	}
 	tm := newTaskManager(s.client, s.pm)
@@ -42,8 +45,7 @@ func (s *server) getStatusHandler(w http.ResponseWriter, r *http.Request) {
 	b, err := json.Marshal(s.supervisor.Status())
 	if err != nil {
 		log.Println("Error marshaling:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
+		http.Error(w, InternalServerErrorString, http.StatusInternalServerError)
 		return
 	}
 	fmt.Fprintf(w, "%s", b)
@@ -53,14 +55,12 @@ func (s *server) setStatusHandler(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Println("Error reading body:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
+		http.Error(w, InternalServerErrorString, http.StatusInternalServerError)
 		return
 	}
 	var cmd MonmqCmd
 	if err = json.Unmarshal(data, &cmd); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"Invalid json format.\"}]}\n")
+		http.Error(w, BadRequestString, http.StatusBadRequest)
 		return
 	}
 	var command monmq.Command
@@ -73,10 +73,12 @@ func (s *server) setStatusHandler(w http.ResponseWriter, r *http.Request) {
 		command = monmq.Pause
 	case cmd.Command == "resume":
 		command = monmq.Resume
+	default:
+		http.Error(w, BadRequestString, http.StatusBadRequest)
+		return
 	}
 	if err = s.supervisor.Invoke(command, cmd.Target); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "{\"code\":\"400\",\"title\":\"Bad Request\",\"detail\":\"Invalid command for target.\"}]}\n")
+		http.Error(w, BadRequestString, http.StatusBadRequest)
 		return
 	}
 }
@@ -87,15 +89,13 @@ func (s *server) queryHandler(w http.ResponseWriter, r *http.Request) {
 	result, err := s.pm.QueryBanners(f)
 	if err != nil {
 		log.Println("Error querying banners:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
+		http.Error(w, InternalServerErrorString, http.StatusInternalServerError)
 		return
 	}
 	jsoned, err := json.Marshal(result)
 	if err != nil {
 		log.Println("Error marshaling:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "{\"code\":\"500\",\"title\":\"Internal Server Error\",\"detail\":\"Something went wrong.\"}]}\n")
+		http.Error(w, InternalServerErrorString, http.StatusInternalServerError)
 		return
 	}
 	fmt.Fprintf(w, string(jsoned))
